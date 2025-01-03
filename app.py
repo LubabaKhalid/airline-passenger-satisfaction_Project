@@ -67,7 +67,8 @@ background_html = """
 components.html(background_html, height=0)
 
 # Load the dataset
-df = pd.read_csv('airline_passenger_satisfaction.csv')
+df = pd.read_csv('test.csv')
+df.columns = df.columns.str.lower()  # Converts all column names to lowercase
 
 # Custom Title and Styling
 st.markdown("<h1 style='text-align: center; font-size: 40px; font-weight: bold;'>Airline Passenger Satisfaction Prediction</h1>", unsafe_allow_html=True)
@@ -121,28 +122,50 @@ if visualization_option == "Visualizations":
 
     elif visualization_choice == "Feature Distribution by Satisfaction":
         st.write("<h4 style='font-size: 20px; font-weight: bold;'>Feature Distribution by Satisfaction</h4>", unsafe_allow_html=True)
-        fig, ax = plt.subplots(figsize=(8, 5))
-        sns.boxplot(x='satisfaction', y='age', data=df, palette='Set2', ax=ax)
-        ax.set_title('Age Distribution by Satisfaction', fontsize=22, fontweight='bold')
-        st.pyplot(fig)
+        
+        # Check for available columns in the dataframe
+        st.write("Columns in dataset:", df.columns)
 
+        # Check if 'age' and 'satisfaction' are in the dataframe
+        if 'age' in df.columns and 'satisfaction' in df.columns:
+            # Handle missing values in 'age' if necessary
+            df['age'] = df['age'].fillna(df['age'].mean())  # Handle missing values, replace NaN with mean
+            
+            # Plot the feature distribution by satisfaction (boxplot)
+            fig, ax = plt.subplots(figsize=(8, 5))
+            sns.boxplot(x='satisfaction', y='age', data=df, palette='Set2', ax=ax)
+            ax.set_title('Age Distribution by Satisfaction', fontsize=22, fontweight='bold')
+            st.pyplot(fig)
+        else:
+            st.error("The columns 'age' or 'satisfaction' do not exist in the dataset.")
+
+
+    # Example fix for the scatter plot involving Age and Satisfaction
     elif visualization_choice == "Satisfaction vs Age":
         st.write("<h4 style='font-size: 20px; font-weight: bold;'>Satisfaction vs Age</h4>", unsafe_allow_html=True)
         fig, ax = plt.subplots(figsize=(8, 6))
+        
+        # Use correct column names 'Age' and 'satisfaction'
         sns.scatterplot(x='age', y='satisfaction', data=df, ax=ax)
+        
         ax.set_title("Satisfaction vs Age", fontsize=22, fontweight='bold')
         ax.set_xlabel("Age", fontsize=18)
         ax.set_ylabel("Satisfaction", fontsize=18)
         st.pyplot(fig)
 
+    # Example fix for the scatter plot involving Flight Distance and Satisfaction
     elif visualization_choice == "Satisfaction vs Flight Distance":
         st.write("<h4 style='font-size: 20px; font-weight: bold;'>Satisfaction vs Flight Distance</h4>", unsafe_allow_html=True)
         fig, ax = plt.subplots(figsize=(8, 6))
-        sns.scatterplot(x='flight_distance', y='satisfaction', data=df, ax=ax)
+        
+        # Use correct column names 'Flight Distance' and 'satisfaction'
+        sns.scatterplot(x='flight distance', y='satisfaction', data=df, ax=ax)
+        
         ax.set_title("Satisfaction vs Flight Distance", fontsize=22, fontweight='bold')
         ax.set_xlabel("Flight Distance", fontsize=18)
         ax.set_ylabel("Satisfaction", fontsize=18)
         st.pyplot(fig)
+
 
 # Display Dataset Overview Section
 if button_overview:
