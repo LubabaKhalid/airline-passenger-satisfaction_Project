@@ -181,36 +181,45 @@ if button_summary:
 button_model = st.sidebar.button("Model Evaluation")
 
 if button_model:
-    # Preprocess: Convert categorical columns into numerical ones if needed
+    # Convert 'satisfaction' to numeric before using get_dummies
+    df['satisfaction'] = df['satisfaction'].map({'satisfied': 1, 'dissatisfied': 0})
+    
+    # Handle missing values in 'satisfaction' (drop rows with NaN in 'satisfaction')
+    df = df.dropna(subset=['satisfaction'])  # Drops rows where 'satisfaction' is NaN
+    
+    # Alternatively, you can fill NaN values with a default value (e.g., 0 for dissatisfied)
+    # df['satisfaction'].fillna(0, inplace=True)  # 0 represents 'dissatisfied'
+    
+    # Now, apply get_dummies to other categorical columns (except 'satisfaction')
     df = pd.get_dummies(df, drop_first=True)
-
+    
     # Separate features and target (assuming 'satisfaction' is the target)
-    X = df.drop('satisfaction', axis=1)  # Features
-    y = df['satisfaction']  # Target
+    if 'satisfaction' in df.columns:  # Check if 'satisfaction' is in the dataset
+        X = df.drop('satisfaction', axis=1)  # Features
+        y = df['satisfaction']  # Target
 
-    # Encoding 'satisfaction' if it is categorical (e.g., 'satisfied' and 'dissatisfied')
-    y = y.map({'satisfied': 1, 'dissatisfied': 0})
+        # Train-test split
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    # Train-test split
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        # Initialize RandomForestClassifier model
+        model = RandomForestClassifier(n_estimators=100, random_state=42)
+        model.fit(X_train, y_train)
 
-    # Initialize RandomForestClassifier model
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
-    model.fit(X_train, y_train)
+        # Make predictions and evaluate
+        y_pred = model.predict(X_test)
 
-    # Make predictions and evaluate
-    y_pred = model.predict(X_test)
+        # Accuracy score and Classification Report
+        st.write(f"Accuracy Score: {accuracy_score(y_test, y_pred):.2f}")
+        st.write(classification_report(y_test, y_pred))
 
-    # Accuracy score and Classification Report
-    st.write(f"Accuracy Score: {accuracy_score(y_test, y_pred):.2f}")
-    st.write(classification_report(y_test, y_pred))
-
-    # Confusion Matrix
-    cm = confusion_matrix(y_test, y_pred)
-    fig, ax = plt.subplots(figsize=(8, 6))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=ax, xticklabels=['Dissatisfied', 'Satisfied'], yticklabels=['Dissatisfied', 'Satisfied'])
-    ax.set_title('Confusion Matrix', fontsize=22, fontweight='bold')
-    st.pyplot(fig)
+        # Confusion Matrix
+        cm = confusion_matrix(y_test, y_pred)
+        fig, ax = plt.subplots(figsize=(8, 6))
+        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=ax, xticklabels=['dissatisfied', 'satisfied'], yticklabels=['dissatisfied', 'satisfied'])
+        ax.set_title('Confusion Matrix', fontsize=22, fontweight='bold')
+        st.pyplot(fig)
+    else:
+        st.error("The 'satisfaction' column is not found in the dataset after encoding.")
 
 # Conclusion Section
 button_conclusion = st.sidebar.button("Conclusion")
